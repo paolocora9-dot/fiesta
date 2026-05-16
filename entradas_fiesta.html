@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Entradas Fiesta</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@500&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --purple:#533AB7;--purple-dark:#3C3489;--purple-light:#EEEDFE;
+    --green-bg:#EAF3DE;--green-text:#3B6D11;
+    --amber-bg:#FAEEDA;--amber-text:#854F0B;
+    --red-bg:#FCEBEB;--red-text:#A32D2D;
+    --bg:#F5F4F9;--card:#fff;--border:#E2E0EE;
+    --text:#1A1A2E;--muted:#7C7A99;
+  }
+  body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+  /* HEADER */
+  .header{background:var(--purple);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;}
+  .header h1{font-size:18px;font-weight:600;color:#fff;letter-spacing:.3px;}
+  .header-sub{font-size:12px;color:rgba(255,255,255,.7);margin-top:1px;}
+  .cfg-btn{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;}
+
+  /* STATS */
+  .stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:16px;background:var(--purple-dark);}
+  .stat{background:rgba(255,255,255,.12);border-radius:10px;padding:10px;text-align:center;}
+  .stat-n{font-size:24px;font-weight:600;color:#fff;}
+  .stat-l{font-size:11px;color:rgba(255,255,255,.65);margin-top:2px;}
+
+  /* TABS */
+  .tabs{display:flex;background:#fff;border-bottom:1px solid var(--border);}
+  .tab{flex:1;padding:12px 8px;border:none;background:transparent;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--muted);font-weight:500;border-bottom:2px solid transparent;transition:all .15s;}
+  .tab.active{color:var(--purple);border-bottom-color:var(--purple);}
+
+  .panel{display:none;padding:16px;}
+  .panel.active{display:block;}
+
+  /* SEARCH */
+  .search-wrap{position:relative;margin-bottom:12px;}
+  .search-wrap input{width:100%;padding:10px 16px 10px 40px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;background:#fff;color:var(--text);}
+  .search-wrap input:focus{outline:none;border-color:var(--purple);}
+  .search-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;}
+
+  /* GUEST LIST */
+  .guest-list{display:flex;flex-direction:column;gap:6px;}
+  .guest-item{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:border-color .15s;active:scale(.98);}
+  .guest-item:active{transform:scale(.98);}
+  .guest-item.checked{border-color:#97C459;background:#FAFFF5;}
+  .g-name{font-size:14px;font-weight:500;}
+  .g-id{font-size:11px;color:var(--muted);margin-top:2px;font-family:'DM Mono',monospace;}
+  .badge{font-size:11px;padding:4px 9px;border-radius:99px;font-weight:500;white-space:nowrap;}
+  .badge-p{background:var(--amber-bg);color:var(--amber-text);}
+  .badge-in{background:var(--green-bg);color:var(--green-text);}
+
+  /* MODAL */
+  .overlay{position:fixed;inset:0;background:rgba(10,8,30,.6);z-index:50;display:flex;align-items:flex-end;justify-content:center;}
+  .modal{background:#fff;border-radius:20px 20px 0 0;padding:0;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;}
+  .modal-drag{width:40px;height:4px;background:#ddd;border-radius:2px;margin:12px auto 0;}
+
+  /* TICKET */
+  .ticket{margin:16px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(83,58,183,.15);}
+  .ticket-head{background:linear-gradient(135deg,var(--purple) 0%,var(--purple-dark) 100%);padding:20px;text-align:center;color:#fff;}
+  .ticket-head .t-event{font-size:19px;font-weight:600;letter-spacing:.5px;}
+  .ticket-head .t-date{font-size:12px;opacity:.8;margin-top:4px;}
+  .ticket-body{background:#fff;padding:20px;display:flex;flex-direction:column;align-items:center;gap:12px;}
+  .t-name{font-size:20px;font-weight:600;text-align:center;}
+  .t-code{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace;letter-spacing:1px;}
+  .qr-wrap{padding:8px;border:1px solid var(--border);border-radius:10px;background:#fff;}
+  .t-tipo{font-size:12px;background:var(--purple-light);color:var(--purple-dark);padding:4px 14px;border-radius:99px;font-weight:500;}
+  .ticket-foot{border-top:2px dashed var(--border);padding:12px 20px;text-align:center;font-size:11px;color:var(--muted);background:#fff;}
+  .modal-btns{display:flex;gap:8px;padding:12px 16px 24px;justify-content:center;}
+  .mbtn{flex:1;max-width:140px;padding:10px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);font-weight:500;}
+  .mbtn:active{background:#f5f5f5;}
+  .mbtn-close{background:var(--purple);color:#fff;border-color:var(--purple);}
+  .mbtn-close:active{background:var(--purple-dark);}
+
+  /* SCANNER */
+  .scan-area{border:2px dashed var(--border);border-radius:14px;min-height:200px;display:flex;align-items:center;justify-content:center;background:#fafafa;margin-bottom:14px;overflow:hidden;}
+  .scan-placeholder{text-align:center;color:var(--muted);padding:2rem;}
+  .scan-placeholder svg{margin-bottom:10px;opacity:.4;}
+  #reader{width:100%;}
+  .scan-btns{display:flex;gap:8px;justify-content:center;margin-bottom:16px;}
+  .sbtn{padding:10px 20px;border:1px solid var(--border);border-radius:10px;background:#fff;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;color:var(--text);font-weight:500;}
+  .sbtn-main{background:var(--purple);color:#fff;border-color:var(--purple);}
+  .result-box{border-radius:14px;border:1px solid;padding:18px;text-align:center;margin-bottom:12px;}
+  .result-ok{background:var(--green-bg);border-color:#97C459;}
+  .result-fail{background:var(--red-bg);border-color:#F09595;}
+  .result-ico{font-size:40px;line-height:1;}
+  .result-name{font-size:18px;font-weight:600;margin:8px 0 4px;}
+  .result-sub{font-size:13px;}
+  .manual-area{border-top:1px solid var(--border);padding-top:14px;margin-top:4px;}
+  .manual-area label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px;}
+  .manual-row{display:flex;gap:8px;}
+  .manual-row input{flex:1;padding:10px 14px;border:1px solid var(--border);border-radius:10px;font-size:14px;font-family:'DM Sans',sans-serif;}
+  .manual-row button{padding:10px 16px;background:var(--purple);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:13px;font-family:'DM Sans',sans-serif;font-weight:500;}
+
+  /* ADD */
+  .add-card{background:#fff;border:1px solid var(--border);border-radius:14px;padding:18px;}
+  .add-card p{font-size:13px;color:var(--muted);margin-bottom:14px;}
+  .field-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+  .field label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
+  .field input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;color:var(--text);}
+  .field input:focus{outline:none;border-color:var(--purple);}
+  .add-btn{width:100%;padding:12px;background:var(--purple);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:600;}
+
+  /* CONFIG MODAL */
+  .cfg-overlay{position:fixed;inset:0;background:rgba(10,8,30,.6);z-index:60;display:flex;align-items:center;justify-content:center;padding:20px;}
+  .cfg-card{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:360px;}
+  .cfg-card h3{font-size:16px;font-weight:600;margin-bottom:16px;}
+  .cfg-field{margin-bottom:12px;}
+  .cfg-field label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px;}
+  .cfg-field input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:'DM Sans',sans-serif;}
+  .cfg-field input:focus{outline:none;border-color:var(--purple);}
+  .cfg-btns{display:flex;gap:8px;margin-top:16px;}
+  .cfg-btns button{flex:1;padding:10px;border-radius:8px;cursor:pointer;font-size:14px;font-family:'DM Sans',sans-serif;font-weight:500;}
+  .cfg-cancel{background:#fff;border:1px solid var(--border);color:var(--text);}
+  .cfg-save{background:var(--purple);border:none;color:#fff;}
+
+  .empty{text-align:center;color:var(--muted);padding:3rem 1rem;font-size:14px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="header h1" style="font-size:18px;font-weight:600;color:#fff;letter-spacing:.3px;" id="header-title">🎉 FIESTA</div>
+    <div class="header-sub" id="header-sub">Sistema de entradas</div>
+  </div>
+  <button class="cfg-btn" onclick="openConfig()">⚙️ Evento</button>
+</div>
+
+<div class="stats">
+  <div class="stat"><div class="stat-n" id="s-total">99</div><div class="stat-l">Total</div></div>
+  <div class="stat"><div class="stat-n" id="s-in" style="color:#B8F0A0">0</div><div class="stat-l">Ingresaron</div></div>
+  <div class="stat"><div class="stat-n" id="s-pend" style="color:#FFD9A0">99</div><div class="stat-l">Pendientes</div></div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('list')">👥 Lista</button>
+  <button class="tab" onclick="switchTab('scan')">📷 Escáner</button>
+  <button class="tab" onclick="switchTab('add')">➕ Agregar</button>
+</div>
+
+<!-- LISTA -->
+<div id="tab-list" class="panel active">
+  <div class="search-wrap">
+    <span class="search-ico">🔍</span>
+    <input type="text" id="searchInput" placeholder="Buscar por nombre..." oninput="filterGuests()" />
+  </div>
+  <div class="guest-list" id="guestList"></div>
+</div>
+
+<!-- ESCANER -->
+<div id="tab-scan" class="panel">
+  <div class="scan-area" id="scanArea">
+    <div class="scan-placeholder" id="scanPlaceholder">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="3" height="3"/><rect x="18" y="18" width="3" height="3"/><rect x="14" y="18" width="3" height="3" style="opacity:0"/></svg>
+      <div style="font-size:14px;font-weight:500;">Activar cámara para escanear</div>
+    </div>
+    <div id="reader"></div>
+  </div>
+  <div class="scan-btns">
+    <button class="sbtn sbtn-main" id="btnStart" onclick="startScanner()">📷 Iniciar escáner</button>
+    <button class="sbtn" id="btnStop" onclick="stopScanner()" style="display:none">⏹ Detener</button>
+  </div>
+  <div id="scanResult" style="display:none"></div>
+  <div class="manual-area">
+    <label>Validar por código o nombre completo:</label>
+    <div class="manual-row">
+      <input type="text" id="manualInput" placeholder="FEST-001 o nombre..." />
+      <button onclick="validateManual()">Validar</button>
+    </div>
+  </div>
+</div>
+
+<!-- AGREGAR -->
+<div id="tab-add" class="panel">
+  <div class="add-card">
+    <p>Agregar un invitado que no estaba en la lista original.</p>
+    <div class="field-grid">
+      <div class="field"><label>Nombre</label><input type="text" id="newFirst" placeholder="Nombre" /></div>
+      <div class="field"><label>Apellido</label><input type="text" id="newLast" placeholder="Apellido" /></div>
+    </div>
+    <button class="add-btn" onclick="addGuest()">➕ Agregar invitado</button>
+  </div>
+</div>
+
+<!-- TICKET MODAL -->
+<div class="overlay" id="ticketOverlay" style="display:none" onclick="closeTicket(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-drag"></div>
+    <div class="ticket">
+      <div class="ticket-head">
+        <div class="t-event" id="mt-event">FIESTA</div>
+        <div class="t-date" id="mt-date"></div>
+        <div class="t-date" id="mt-place"></div>
+      </div>
+      <div class="ticket-body">
+        <div class="t-name" id="mt-name"></div>
+        <div class="t-code" id="mt-code"></div>
+        <div class="qr-wrap"><div id="mt-qr"></div></div>
+        <div class="t-tipo" id="mt-tipo">General</div>
+      </div>
+      <div class="ticket-foot" id="mt-foot"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="mbtn" onclick="window.print()">🖨️ Imprimir</button>
+      <button class="mbtn mbtn-close" onclick="closeTicketBtn()">✓ Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIG MODAL -->
+<div class="cfg-overlay" id="cfgOverlay" style="display:none" onclick="closeCfg(event)">
+  <div class="cfg-card" onclick="event.stopPropagation()">
+    <h3>⚙️ Datos del evento</h3>
+    <div class="cfg-field"><label>Nombre del evento</label><input type="text" id="cfg-name" placeholder="Mi Fiesta" /></div>
+    <div class="cfg-field"><label>Fecha</label><input type="text" id="cfg-date" placeholder="Sábado 24 de mayo" /></div>
+    <div class="cfg-field"><label>Lugar</label><input type="text" id="cfg-place" placeholder="Casa de María" /></div>
+    <div class="cfg-field"><label>Hora</label><input type="text" id="cfg-time" placeholder="21:00 hs" /></div>
+    <div class="cfg-btns">
+      <button class="cfg-cancel" onclick="document.getElementById('cfgOverlay').style.display='none'">Cancelar</button>
+      <button class="cfg-save" onclick="saveConfig()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const RAW = [
+  ["SANDRO","CORA"],["LIZANDRO","CORA"],["PAOLO","CORA"],["ROSA","GARAY"],["LINO","GARAY"],
+  ["EULALIA","GUERRA"],["JULIO","QUISPE"],["CARLOS","GARAY"],["ROCIO","ROMERO"],["LUCERO","GARAY"],
+  ["MATHEW","GARAY"],["MAX","LAZARO"],["MARICELA","GOMEZ"],["JACK","LAZARO"],["ROCIO","LAZARO"],
+  ["MAFER","LAZARO"],["GLORIA","QUISPE"],["MARIO","MANYARI"],["ALVARO","MANDUJANO"],["VALESKA","MANDUJANO"],
+  ["MARCO","GALVEZ"],["RAFAEL","LAURA"],["FERNANDO","LAURA"],["ROCIO","LAURA"],["EDGAR","LAURA"],
+  ["IVONE","LAURA"],["ANTONIO","GALVEZ"],["NAYELI","GALVEZ"],["MANUEL","GARAY"],["LIZBETH","ROJAS"],
+  ["ALICIA","GARAY"],["JOSE","GARAY"],["ISABEL","GARAY"],["DANGELA","GARAY"],["MELCHORA","GUERRA"],
+  ["LUCHO","ESPOSO GUERRA"],["ESPOSO","DIANA"],["GOYA","RODRIGUEZ"],["BLANCA","TASAYCO"],["CARMEN","TASAYCO"],
+  ["FERNANDO","GARAY"],["MAXI","LAZARO"],["CAROLINA","BUSTOS"],["JACQUELINE","BUSTOS"],["BETO","AREQUIPEÑO"],
+  ["LILIANA","BOLIVAR"],["BELEN","MONGE"],["BERNABE","DE LA CRUZ"],["MIRIAM","PAREJA"],["JORGE","LINO"],
+  ["LUCY","LINO"],["RODOLFO","FITO"],["ROSITA","GUZMAN"],["IVAN","SANCHEZ"],["LIZET","SANCHEZ"],
+  ["AIDA","LOZADA"],["ESPOSO","LOZADA"],["ORLANDO","CABRERA"],["NANCY","DE LA CRUZ"],["EDDY","RODRIGUEZ"],
+  ["SILVIA","RAMOS"],["JAVIER","ROSAS"],["YSABEL","DE LA CRUZ"],["JORGE","GARAY"],["SONIA","GOMEZ"],
+  ["LORENA","URBANO"],["MILAGROS","ROMERO"],["EDGAR","TUNANÑANA"],["JUDITH","LOZADA"],["BELINDA","QUIÑONES"],
+  ["PEDRO","MOLOCHE"],["JOSE","PATIÑO"],["MIRIAM","APOLAYA"],["ESPOSO","APOLAYA"],["ANGEL","NAVARRO"],
+  ["MARY","NAVARRO"],["MILAGROS","JUAREZ"],["MARIA","CHUCYA"],["JACKY","BRIONES"],["MAJU","ROLDAN"],
+  ["VERONICA","BERNAOLA"],["MICAELA","DONGO"],["CHELO","GARCIA"],["RAQUEL","GARCIA"],["BELIZA","ANDIA"],
+  ["ANITA","SOSA"],["AMANDA","SERRANO"],["JUAN","YARANGA"],["JUANA","AGUAYO"],["BEATRIZ","POLANCO"],
+  ["SELENA","SALVATIERRA"],["ERNESTO","SALVATIERRA"],["MIRTHA","ROBLADILLO"],["FREDDY","HUARIPAUCAR"],
+  ["ELBA","VILLAFANA"],["GELACIO","GUTIERREZ"],["WIDES","GUTIERREZ"],["GLADYS","TORRES"]
+];
+
+let event = {name:'FIESTA',date:'',place:'',time:''};
+let guests = RAW.map((r,i)=>({
+  id:'FEST-'+String(i+1).padStart(3,'0'),
+  firstName:r[0].trim(), lastName:r[1].trim(),
+  fullName:r[0].trim()+' '+r[1].trim(), status:'pending'
+}));
+let scanner=null, scanning=false;
+
+function cap(s){return s.charAt(0)+s.slice(1).toLowerCase();}
+function niceName(g){return cap(g.firstName)+' '+g.lastName.split(' ').map(w=>cap(w)).join(' ');}
+
+function renderList(list){
+  const el=document.getElementById('guestList');
+  if(!list||!list.length){el.innerHTML='<div class="empty">Sin resultados</div>';return;}
+  el.innerHTML=list.map(g=>`
+    <div class="guest-item${g.status==='in'?' checked':''}" onclick="openTicket('${g.id}')">
+      <div>
+        <div class="g-name">${niceName(g)}</div>
+        <div class="g-id">${g.id}</div>
+      </div>
+      <span class="badge ${g.status==='in'?'badge-in':'badge-p'}">${g.status==='in'?'✓ Ingresó':'Pendiente'}</span>
+    </div>`).join('');
+}
+
+function filterGuests(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  renderList(q?guests.filter(g=>g.fullName.toLowerCase().includes(q)||g.id.includes(q.toUpperCase())):guests);
+}
+
+function updateStats(){
+  const inn=guests.filter(g=>g.status==='in').length;
+  document.getElementById('s-total').textContent=guests.length;
+  document.getElementById('s-in').textContent=inn;
+  document.getElementById('s-pend').textContent=guests.length-inn;
+}
+
+function openTicket(id){
+  const g=guests.find(x=>x.id===id);if(!g)return;
+  const fn=niceName(g);
+  document.getElementById('mt-event').textContent=event.name.toUpperCase();
+  document.getElementById('mt-date').textContent=(event.date||'')+(event.time?' · '+event.time:'');
+  document.getElementById('mt-place').textContent=event.place||'';
+  document.getElementById('mt-name').textContent=fn;
+  document.getElementById('mt-code').textContent=g.id;
+  document.getElementById('mt-foot').textContent='Presentar en el ingreso'+(event.date?' · '+event.date:'');
+  const qrDiv=document.getElementById('mt-qr');
+  qrDiv.innerHTML='';
+  new QRCode(qrDiv,{text:JSON.stringify({id:g.id,name:fn,event:event.name}),width:150,height:150,colorDark:'#533AB7',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+  document.getElementById('ticketOverlay').style.display='flex';
+}
+function closeTicket(e){if(e.target===document.getElementById('ticketOverlay'))closeTicketBtn();}
+function closeTicketBtn(){document.getElementById('ticketOverlay').style.display='none';}
+
+function switchTab(t){
+  ['list','scan','add'].forEach((n,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',n===t);
+    document.getElementById('tab-'+n).classList.toggle('active',n===t);
+  });
+  if(t!=='scan'&&scanning)stopScanner();
+}
+
+function startScanner(){
+  if(scanning)return;
+  document.getElementById('scanPlaceholder').style.display='none';
+  document.getElementById('reader').style.display='block';
+  document.getElementById('btnStart').style.display='none';
+  document.getElementById('btnStop').style.display='inline-block';
+  document.getElementById('scanResult').style.display='none';
+  scanner=new Html5Qrcode('reader');
+  scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:220,height:220}},onScan,()=>{})
+    .catch(()=>{showResult(false,'Sin acceso a cámara','Verifica los permisos en tu navegador');stopScanner();});
+  scanning=true;
+}
+function stopScanner(){
+  if(scanner&&scanning)scanner.stop().catch(()=>{});
+  scanning=false;
+  document.getElementById('reader').style.display='none';
+  document.getElementById('scanPlaceholder').style.display='block';
+  document.getElementById('btnStart').style.display='inline-block';
+  document.getElementById('btnStop').style.display='none';
+}
+function onScan(text){
+  stopScanner();
+  try{const d=JSON.parse(text);validate(d.id);}
+  catch(e){showResult(false,'QR inválido','Este código no corresponde a una entrada.');}
+}
+function validateManual(){
+  const v=document.getElementById('manualInput').value.trim().toUpperCase();
+  const byId=guests.find(g=>g.id===v);
+  if(byId){validate(byId.id);return;}
+  const byName=guests.find(g=>g.fullName===v);
+  if(byName){validate(byName.id);return;}
+  showResult(false,v||'—','No encontrado en la lista de invitados.');
+}
+function validate(id){
+  const g=guests.find(x=>x.id===id);
+  if(!g){showResult(false,id,'Entrada no encontrada.');return;}
+  if(g.status==='in'){showResult(false,niceName(g),'⚠️ Esta entrada ya fue utilizada.');return;}
+  g.status='in';
+  updateStats();renderList(guests);
+  showResult(true,niceName(g),g.id+' · General');
+}
+function showResult(ok,name,sub){
+  const el=document.getElementById('scanResult');
+  el.className='result-box '+(ok?'result-ok':'result-fail');
+  el.innerHTML=`<div class="result-ico">${ok?'✅':'❌'}</div>
+    <div class="result-name" style="color:${ok?'#3B6D11':'#A32D2D'}">${name}</div>
+    <div class="result-sub" style="color:${ok?'#639922':'#E24B4A'}">${sub}</div>
+    <div style="font-size:13px;margin-top:6px;font-weight:600;color:${ok?'#3B6D11':'#A32D2D'}">${ok?'¡Acceso permitido!':'Acceso denegado'}</div>`;
+  el.style.display='block';
+}
+
+function addGuest(){
+  const fn=document.getElementById('newFirst').value.trim();
+  const ln=document.getElementById('newLast').value.trim();
+  if(!fn||!ln){alert('Ingresa nombre y apellido.');return;}
+  const id='FEST-'+String(guests.length+1).padStart(3,'0');
+  guests.push({id,firstName:fn.toUpperCase(),lastName:ln.toUpperCase(),fullName:(fn+' '+ln).toUpperCase(),status:'pending'});
+  document.getElementById('newFirst').value='';
+  document.getElementById('newLast').value='';
+  updateStats();renderList(guests);switchTab('list');
+}
+
+function openConfig(){
+  document.getElementById('cfg-name').value=event.name;
+  document.getElementById('cfg-date').value=event.date;
+  document.getElementById('cfg-place').value=event.place;
+  document.getElementById('cfg-time').value=event.time;
+  document.getElementById('cfgOverlay').style.display='flex';
+}
+function closeCfg(e){if(e.target===document.getElementById('cfgOverlay'))document.getElementById('cfgOverlay').style.display='none';}
+function saveConfig(){
+  event.name=document.getElementById('cfg-name').value||'FIESTA';
+  event.date=document.getElementById('cfg-date').value;
+  event.place=document.getElementById('cfg-place').value;
+  event.time=document.getElementById('cfg-time').value;
+  document.getElementById('header-title').textContent='🎉 '+event.name.toUpperCase();
+  document.getElementById('header-sub').textContent=(event.date||'')+(event.place?' · '+event.place:'');
+  document.getElementById('cfgOverlay').style.display='none';
+}
+
+renderList(guests);
+updateStats();
+</script>
+</body>
+</html>
